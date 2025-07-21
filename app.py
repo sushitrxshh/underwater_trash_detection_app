@@ -10,31 +10,46 @@ import json
 from ultralytics import YOLO
 import tempfile
 import uuid
-from trash_classes import get_class_name_short, get_class_color, update_mapping_from_model
+import sys # Added for sys.path manipulation
+from trash_classes import get_class_name_short, get_class_color, update_mapping_from_model, EXPECTED_CLASSES # Added EXPECTED_CLASSES
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the trained model
+# Ensure the current directory is in sys.path for module imports
+# This is crucial for deployment environments where current working directory might not be in path
+if os.getcwd() not in sys.path:
+    sys.path.insert(0, os.getcwd())
+
+# Global variable to hold the model (and allow reloading)
 model = None
-try:
-    print("🔄 Loading YOLO model...")
-    # Ensure best.pt is in the same directory as app.py or provide full path
-    model = YOLO('best.pt') 
-    print("✅ Model loaded successfully")
-    
-    # Debug: Print model class names if available and update mapping
-    if hasattr(model, 'names'):
-        print("🔍 Model class names:", model.names)
-        # Update our mapping to match the model's actual class names
-        update_mapping_from_model(model.names)
-    else:
-        print("⚠️ No class names found in model")
-except Exception as e:
-    print(f"❌ Error loading model: {e}")
-    import traceback
-    traceback.print_exc()
-    model = None
+
+# Function to load the model, allowing it to be called multiple times (for reload)
+def load_yolo_model():
+    global model
+    try:
+        print("🔄 Loading YOLO model...")
+        # Ensure best.pt is in the same directory as app.py or provide full path
+        model = YOLO('best.pt') 
+        print("✅ Model loaded successfully")
+        
+        if hasattr(model, 'names') and model.names:
+            print("🔍 Model class names:", model.names)
+            update_mapping_from_model(model.names)
+        else:
+            print("⚠️ No class names found in model or model.names is empty")
+            # If model has no names, ensure a default mapping or clear it
+            update_mapping_from_model({}) # Clear or reset to default if no names
+        return True
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        import traceback
+        traceback.print_exc()
+        model = None
+        return False
+
+# Initial model load when the app starts
+model_load_success = load_yolo_model()
 
 # Create uploads directory if it doesn't exist
 UPLOAD_FOLDER = 'uploads'
@@ -52,15 +67,64 @@ processed_frames_storage = {}
 def index():
     return render_template('index.html')
 
-@app.route('/health')
+@app.route('/health', methods=['GET'])
 def health():
-    model_status = "loaded" if model is not None else "not loaded"
+    # Check if OpenCV is available
+    opencv_available = False
+    try:
+        import cv2
+        opencv_available = True
+    except ImportError:
+        pass
+
+    # Check if YOLO is available (more deeply, if it can import YOLO class)
+    yolo_available = False
+    try:
+        from ultralytics import YOLO
+        yolo_available = True
+    except ImportError:
+        pass
+
+    model_file_exists = os.path.exists('best.pt')
+    model_loaded = model is not None
+
+    model_class_names = {}
+    if model_loaded and hasattr(model, 'names'):
+        model_class_names = model.names
+    
+    # Check if trash_classes.py imported correctly
+    trash_classes_imported = False
+    try:
+        from trash_classes import EXPECTED_CLASSES
+        if EXPECTED_CLASSES: # Check if it has content
+            trash_classes_imported = True
+    except ImportError:
+        pass
+
+
     return jsonify({
         'status': 'healthy', 
         'message': 'Underwater Trash Detection System is running',
-        'model_status': model_status,
-        'model_loaded': model is not None
+        'model_loaded': model_loaded,
+        'model_type': str(type(model)) if model_loaded else 'N/A',
+        'model_class_names': model_class_names,
+        'num_classes': len(model_class_names) if model_loaded else 0,
+        'environment_check': {
+            'opencv_available': opencv_available,
+            'yolo_available': yolo_available,
+            'trash_classes_imported': trash_classes_imported,
+            'model_file_exists': model_file_exists
+        }
     })
+
+@app.route('/reload_model', methods=['POST'])
+def reload_model():
+    print("Attempting to reload model...")
+    success = load_yolo_model()
+    if success:
+        return jsonify({'status': 'success', 'message': 'Model reloaded successfully!'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Failed to reload model. Check server logs.'}), 500
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
@@ -272,6 +336,10 @@ def process_frame():
         confidence_threshold = float(data.get('confidence_threshold', 0.5))
         max_detections = int(data.get('max_detections', 20))
         
+        # Check if model is loaded
+        if model is None:
+            return jsonify({'error': 'Model is not loaded. Please check if best.pt file exists and is valid.'}), 500
+
         # Remove data URL prefix
         frame_data = frame_data.split(',')[1]
         
@@ -321,17 +389,8 @@ def process_frame():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-# Ensure this line is present at the top of your app.py
-# from flask import Flask, ...
-# app = Flask(__name__) # This line should be at the top level of your script
-
-# The following block is for local development only.
-# Gunicorn will directly import and run the 'app' instance.
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    # For local development, you can keep debug=True if you prefer.
-    app.run(debug=True, host='0.0.0.0', port=port)
-
-# For Gunicorn, the 'app' variable (your Flask instance) needs to be directly accessible
-# at the top level of the module. Since you already have 'app = Flask(__name__)'
-# at the top, no further changes are needed here for Gunicorn to find it.
+    # In debug=True, the app will reload on code changes, which is useful for development.
+    # For production, set debug=False.
+    app.run(debug=True, host='0.0.0.0', port=port) # Changed debug to True for local dev
