@@ -321,8 +321,17 @@ def process_frame():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+# Ensure this line is present at the top of your app.py
+# from flask import Flask, ...
+# app = Flask(__name__) # This line should be at the top level of your script
+
+# The following block is for local development only.
+# Gunicorn will directly import and run the 'app' instance.
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    # In debug=True, the app will reload on code changes, which is useful for development.
-    # For production, set debug=False.
-    app.run(debug=False, host='0.0.0.0', port=port)
+    # For local development, you can keep debug=True if you prefer.
+    app.run(debug=True, host='0.0.0.0', port=port)
+
+# For Gunicorn, the 'app' variable (your Flask instance) needs to be directly accessible
+# at the top level of the module. Since you already have 'app = Flask(__name__)'
+# at the top, no further changes are needed here for Gunicorn to find it.
