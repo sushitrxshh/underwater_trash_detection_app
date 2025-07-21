@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Underwater Trash DetectionG</title>
+    <title>Advanced Underwater Trash Detection</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -19,84 +19,127 @@
         </div>
     </div>
 
-    <div class="main-container">
-        <header class="app-header">
-            <h1 class="app-title">🌊 Advanced Underwater Trash Detection</h1>
-            <p class="app-tagline">Protecting our oceans, one precise detection at a time</p>
-        </header>
+    <div class="main-wrapper">
+        <aside class="sidebar glass-card">
+            <h2 class="sidebar-title">Controls</h2>
 
-        <section class="controls-grid">
-            <div class="glass-card upload-card">
-                <h3 class="card-title"><i class="fas fa-video card-icon"></i> Video Analysis</h3>
-                <div class="upload-area" id="uploadArea">
-                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                    <p class="upload-text">Drag & drop your video here or click to browse</p>
-                    <p class="upload-hint">Supported formats: MP4, AVI, MOV, MKV</p>
+            <div class="sidebar-section">
+                <h3 class="sidebar-section-title"><i class="fas fa-microchip"></i> Model Status</h3>
+                <div class="model-status-info">
+                    <span id="modelStatusIndicator" class="status-indicator model-unknown"><i class="fas fa-question-circle"></i></span>
+                    <span id="modelStatusText">Loading...</span>
                 </div>
-                <input type="file" id="videoInput" class="hidden-input" accept="video/*">
-                <div class="button-group">
-                    <button class="btn primary-btn" id="chooseVideoBtn"><i class="fas fa-folder-open btn-icon"></i> Choose Video File</button>
-                    <button class="btn secondary-btn" id="processVideoBtn" style="display: none;"><i class="fas fa-play btn-icon"></i> Process Video</button>
+                <div class="model-classes-info">
+                    Classes: <span id="modelClassesCount">?</span>
                 </div>
+                <button class="btn primary-btn btn-sm" id="reloadModelBtn"><i class="fas fa-redo"></i> Reload Model</button>
             </div>
 
-            <div class="glass-card settings-card">
-                <h3 class="card-title"><i class="fas fa-cogs card-icon"></i> Processing Settings</h3>
+            <div class="sidebar-section">
+                <h3 class="sidebar-section-title"><i class="fas fa-sliders-h"></i> Detection Settings</h3>
                 <div class="settings-group">
-                    <label for="frameSkip" class="setting-label">Frame Skip Interval:</label>
-                    <input type="range" id="frameSkip" min="1" max="20" value="5" class="slider-input">
-                    <span id="frameSkipValue" class="slider-value">5</span>
-                    <small class="setting-hint">Process every Nth frame (1 = all frames)</small>
+                    <label for="confidenceThreshold" class="setting-label-sm">Confidence Threshold:</label>
+                    <input type="range" id="confidenceThreshold" min="0.1" max="0.9" step="0.05" value="0.5" class="slider-input-sm">
+                    <span id="confidenceValue" class="slider-value-sm">0.50</span>
                 </div>
                 <div class="settings-group">
-                    <label for="confidenceThreshold" class="setting-label">Confidence Threshold:</label>
-                    <input type="range" id="confidenceThreshold" min="0.1" max="0.9" step="0.05" value="0.5" class="slider-input">
-                    <span id="confidenceValue" class="slider-value">0.50</span>
-                    <small class="setting-hint">Minimum confidence for detection (0.1 = 10%)</small>
+                    <label for="frameSkip" class="setting-label-sm">Frame Skip Interval:</label>
+                    <input type="range" id="frameSkip" min="1" max="20" value="5" class="slider-input-sm">
+                    <span id="frameSkipValue" class="slider-value-sm">5</span>
                 </div>
                 <div class="settings-group">
-                    <label for="maxDetections" class="setting-label">Max Detections per Frame:</label>
-                    <input type="range" id="maxDetections" min="1" max="50" value="20" class="slider-input">
-                    <span id="maxDetectionsValue">20</span>
-                    <small class="setting-hint">Max objects to show per frame</small>
+                    <label for="maxDetections" class="setting-label-sm">Max Detections per Frame:</label>
+                    <input type="range" id="maxDetections" min="1" max="50" value="20" class="slider-input-sm">
+                    <span id="maxDetectionsValue" class="slider-value-sm">20</span>
                 </div>
             </div>
-
-            <div class="glass-card webcam-card">
-                <h3 class="card-title"><i class="fas fa-webcam card-icon"></i> Live Detection</h3>
-                <div class="webcam-viewer">
-                    <video id="webcam" autoplay muted playsinline></video>
-                    <canvas id="webcamCanvas" class="webcam-overlay"></canvas>
-                </div>
-                <div class="button-group">
-                    <button class="btn primary-btn" id="startWebcamBtn"><i class="fas fa-video btn-icon"></i> Start Webcam</button>
-                    <button class="btn secondary-btn" id="stopWebcamBtn" style="display: none;"><i class="fas fa-stop btn-icon"></i> Stop Webcam</button>
-                </div>
-            </div>
-        </section>
-
-        <div id="status" class="app-status" style="display: none;"></div>
-        <div class="model-status-check">
-            <button class="btn success-btn" id="checkStatusBtn">
-                <i class="fas fa-sync-alt btn-icon"></i> Check Model Status
-            </button>
-        </div>
-
-        <section class="results-section" id="resultsSection" style="display: none;">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-search-dollar section-icon"></i> Detection Results</h2>
-                <p id="resultsInfo" class="section-subtitle"></p>
-                <button class="btn accent-btn" id="recreateVideoBtn" style="display: none;">
-                    <i class="fas fa-film btn-icon"></i> Recreate Video with Detections
+            
+            <div class="sidebar-section model-status-check-sm">
+                <button class="btn success-btn btn-sm" id="checkStatusBtn">
+                    <i class="fas fa-sync-alt btn-icon"></i> Refresh Status
                 </button>
             </div>
-            <div id="loading" class="loading-indicator" style="display: none;">
-                <div class="spinner"></div>
-                <p class="loading-text">Processing video frames...</p>
-            </div>
-            <div id="videoRecreationStatus" class="app-status" style="display: none;"></div>
-            <div id="framesGrid" class="results-grid"></div>
-        </section>
+        </aside>
+
+        <main class="main-content">
+            <header class="app-header">
+                <h1 class="app-title">🌊 Advanced Underwater Trash Detection</h1>
+                <p class="app-tagline">Protecting our oceans, one precise detection at a time</p>
+            </header>
+
+            <section class="controls-grid">
+                <div class="glass-card upload-card">
+                    <h3 class="card-title"><i class="fas fa-video card-icon"></i> Video Analysis</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <p class="upload-text">Drag & drop your video here or click to browse</p>
+                        <p class="upload-hint">Supported formats: MP4, AVI, MOV, MKV</p>
+                    </div>
+                    <input type="file" id="videoInput" class="hidden-input" accept="video/*">
+                    <div class="button-group">
+                        <button class="btn primary-btn" id="chooseVideoBtn"><i class="fas fa-folder-open btn-icon"></i> Choose Video File</button>
+                        <button class="btn secondary-btn" id="processVideoBtn" style="display: none;"><i class="fas fa-play btn-icon"></i> Process Video</button>
+                    </div>
+                </div>
+
+                <div class="glass-card webcam-card">
+                    <h3 class="card-title"><i class="fas fa-webcam card-icon"></i> Live Detection</h3>
+                    <div class="webcam-viewer">
+                        <video id="webcam" autoplay muted playsinline></video>
+                        <canvas id="webcamCanvas" class="webcam-overlay"></canvas>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn primary-btn" id="startWebcamBtn"><i class="fas fa-video btn-icon"></i> Start Webcam</button>
+                        <button class="btn secondary-btn" id="stopWebcamBtn" style="display: none;"><i class="fas fa-stop btn-icon"></i> Stop Webcam</button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="status" class="app-status" style="display: none;"></div>
+            
+            <section class="debug-info-section glass-card">
+                <div class="debug-info-header" id="debugInfoHeader">
+                    <h3 class="card-title-sm"><i class="fas fa-bug"></i> Debug Information</h3>
+                    <i id="debugInfoToggleIcon" class="fas fa-chevron-down toggle-icon"></i>
+                </div>
+                <div class="debug-info-content" id="debugInfoContent" style="display: none;">
+                    <div class="debug-info-group">
+                        <h4>Environment Check:</h4>
+                        <p><span class="debug-label">OpenCV Available:</span> <span id="opencvStatus">?</span></p>
+                        <p><span class="debug-label">YOLO Library Available:</span> <span id="yoloLibStatus">?</span></p>
+                        <p><span class="debug-label">Trash Classes Imported:</span> <span id="trashClassesStatus">?</span></p>
+                        <p><span class="debug-label">Model File Exists:</span> <span id="modelFileStatus">?</span></p>
+                        <p><span class="debug-label">Model Loaded:</span> <span id="modelLoadedStatus">?</span></p>
+                    </div>
+                    <div class="debug-info-group">
+                        <h4>Model Information:</h4>
+                        <p><span class="debug-label">Model Type:</span> <span id="modelTypeText">?</span></p>
+                        <p><span class="debug-label">Classes (ID: Name):</span> <span id="modelClassesList">?</span></p>
+                        <p><span class="debug-label">Number of Classes:</span> <span id="modelNumClasses">?</span></p>
+                    </div>
+                    <div class="button-group">
+                         <button class="btn secondary-btn btn-sm" id="testModelBtn"><i class="fas fa-flask"></i> Test Model</button>
+                         <button class="btn success-btn btn-sm" id="refreshDebugInfoBtn"><i class="fas fa-sync-alt"></i> Refresh Debug Info</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-search-dollar section-icon"></i> Detection Results</h2>
+                    <p id="resultsInfo" class="section-subtitle"></p>
+                    <button class="btn accent-btn" id="recreateVideoBtn" style="display: none;">
+                        <i class="fas fa-film btn-icon"></i> Recreate Video with Detections
+                    </button>
+                </div>
+                <div id="loading" class="loading-indicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Processing video frames...</p>
+                </div>
+                <div id="videoRecreationStatus" class="app-status" style="display: none;"></div>
+                <div id="framesGrid" class="results-grid"></div>
+            </section>
+        </main>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
