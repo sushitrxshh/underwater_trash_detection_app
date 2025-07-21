@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "250mb",
+        "runtime": "python3.9" // Or python3.8, python3.10, python3.11 based on your preference/testing
+      }
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "templates/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "best.pt", // Explicitly include your model file as a static asset
+      "use": "@vercel/static"
+    },
+    {
+      "src": "trash_classes.py", // Explicitly include helper python file
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    // Serve static files from the /static directory
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    // Serve templates (like index.html)
+    { "src": "/templates/(.*)", "dest": "/templates/$1" },
+    // Route all other requests to app.py
+    // This is crucial for Flask to handle routing
+    { "src": "/(.*)", "dest": "/app.py" }
+  ],
+  "installCommand": "pip install -r requirements.txt",
+  "buildCommand": "pip install -r requirements.txt"
+}
