@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Underwater Trash Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="ocean-background">
+        <div class="ocean-surface"></div>
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <header class="app-header">
+            <h1 class="app-title">🌊 Advanced Underwater Trash Detection</h1>
+            <p class="app-tagline">Protecting our oceans, one precise detection at a time</p>
+        </header>
+
+        <section class="controls-grid">
+            <div class="glass-card upload-card">
+                <h3 class="card-title"><i class="fas fa-video card-icon"></i> Video Analysis</h3>
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Drag & drop your video here or click to browse</p>
+                    <p class="upload-hint">Supported formats: MP4, AVI, MOV, MKV</p>
+                </div>
+                <input type="file" id="videoInput" class="hidden-input" accept="video/*">
+                <div class="button-group">
+                    <button class="btn primary-btn" id="chooseVideoBtn"><i class="fas fa-folder-open btn-icon"></i> Choose Video File</button>
+                    <button class="btn secondary-btn" id="processVideoBtn" style="display: none;"><i class="fas fa-play btn-icon"></i> Process Video</button>
+                </div>
+            </div>
+
+            <div class="glass-card settings-card">
+                <h3 class="card-title"><i class="fas fa-cogs card-icon"></i> Processing Settings</h3>
+                <div class="settings-group">
+                    <label for="frameSkip" class="setting-label">Frame Skip Interval:</label>
+                    <input type="range" id="frameSkip" min="1" max="20" value="5" class="slider-input">
+                    <span id="frameSkipValue" class="slider-value">5</span>
+                    <small class="setting-hint">Process every Nth frame (1 = all frames)</small>
+                </div>
+                <div class="settings-group">
+                    <label for="confidenceThreshold" class="setting-label">Confidence Threshold:</label>
+                    <input type="range" id="confidenceThreshold" min="0.1" max="0.9" step="0.05" value="0.5" class="slider-input">
+                    <span id="confidenceValue" class="slider-value">0.50</span>
+                    <small class="setting-hint">Minimum confidence for detection (0.1 = 10%)</small>
+                </div>
+                <div class="settings-group">
+                    <label for="maxDetections" class="setting-label">Max Detections per Frame:</label>
+                    <input type="range" id="maxDetections" min="1" max="50" value="20" class="slider-input">
+                    <span id="maxDetectionsValue">20</span>
+                    <small class="setting-hint">Max objects to show per frame</small>
+                </div>
+            </div>
+
+            <div class="glass-card webcam-card">
+                <h3 class="card-title"><i class="fas fa-webcam card-icon"></i> Live Detection</h3>
+                <div class="webcam-viewer">
+                    <video id="webcam" autoplay muted playsinline></video>
+                    <canvas id="webcamCanvas" class="webcam-overlay"></canvas>
+                </div>
+                <div class="button-group">
+                    <button class="btn primary-btn" id="startWebcamBtn"><i class="fas fa-video btn-icon"></i> Start Webcam</button>
+                    <button class="btn secondary-btn" id="stopWebcamBtn" style="display: none;"><i class="fas fa-stop btn-icon"></i> Stop Webcam</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="status" class="app-status" style="display: none;"></div>
+        <div class="model-status-check">
+            <button class="btn success-btn" id="checkStatusBtn">
+                <i class="fas fa-sync-alt btn-icon"></i> Check Model Status
+            </button>
+        </div>
+
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-search-dollar section-icon"></i> Detection Results</h2>
+                <p id="resultsInfo" class="section-subtitle"></p>
+                <button class="btn accent-btn" id="recreateVideoBtn" style="display: none;">
+                    <i class="fas fa-film btn-icon"></i> Recreate Video with Detections
+                </button>
+            </div>
+            <div id="loading" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <p class="loading-text">Processing video frames...</p>
+            </div>
+            <div id="videoRecreationStatus" class="app-status" style="display: none;"></div>
+            <div id="framesGrid" class="results-grid"></div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
