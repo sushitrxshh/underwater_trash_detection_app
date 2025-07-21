@@ -5,30 +5,49 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSessionId = null; // Store current session ID for video recreation
 
     // --- Element References ---
-    // Video Analysis
+    // Sidebar Elements
+    const modelStatusIndicator = document.getElementById('modelStatusIndicator');
+    const modelStatusText = document.getElementById('modelStatusText');
+    const modelClassesCount = document.getElementById('modelClassesCount');
+    const reloadModelBtn = document.getElementById('reloadModelBtn');
+    const sidebarCheckStatusBtn = document.getElementById('checkStatusBtn'); // From sidebar
+
+    // Main Content Elements
     const uploadArea = document.getElementById('uploadArea');
     const videoInput = document.getElementById('videoInput');
     const chooseVideoBtn = document.getElementById('chooseVideoBtn');
     const processVideoBtn = document.getElementById('processVideoBtn');
     
-    // Live Webcam Detection
     const startWebcamBtn = document.getElementById('startWebcamBtn');
     const stopWebcamBtn = document.getElementById('stopWebcamBtn');
     const webcam = document.getElementById('webcam');
     const webcamCanvas = document.getElementById('webcamCanvas');
     const webcamCtx = webcamCanvas.getContext('2d');
     
-    // Global Status & Results
-    const statusDisplay = document.getElementById('status');
+    const statusDisplay = document.getElementById('status'); // Global app status
     const resultsSection = document.getElementById('resultsSection');
     const loadingIndicator = document.getElementById('loading');
     const framesGrid = document.getElementById('framesGrid');
     const resultsInfo = document.getElementById('resultsInfo');
     const recreateVideoBtn = document.getElementById('recreateVideoBtn');
     const videoRecreationStatus = document.getElementById('videoRecreationStatus');
-    const checkStatusBtn = document.getElementById('checkStatusBtn');
     
-    // Slider controls (shared for both video and image processing)
+    // Debug Information Section
+    const debugInfoHeader = document.getElementById('debugInfoHeader');
+    const debugInfoToggleIcon = document.getElementById('debugInfoToggleIcon');
+    const debugInfoContent = document.getElementById('debugInfoContent');
+    const opencvStatus = document.getElementById('opencvStatus');
+    const yoloLibStatus = document.getElementById('yoloLibStatus');
+    const trashClassesStatus = document.getElementById('trashClassesStatus');
+    const modelFileStatus = document.getElementById('modelFileStatus');
+    const modelLoadedStatus = document.getElementById('modelLoadedStatus');
+    const modelTypeText = document.getElementById('modelTypeText');
+    const modelClassesList = document.getElementById('modelClassesList');
+    const modelNumClasses = document.getElementById('modelNumClasses');
+    const testModelBtn = document.getElementById('testModelBtn');
+    const refreshDebugInfoBtn = document.getElementById('refreshDebugInfoBtn');
+
+    // Slider controls (now primarily controlled from sidebar)
     const frameSkipSlider = document.getElementById('frameSkip');
     const frameSkipValue = document.getElementById('frameSkipValue');
     const confidenceSlider = document.getElementById('confidenceThreshold');
@@ -55,28 +74,128 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-    // --- Initial Load & Model Status Check ---
-    async function checkModelStatus() {
+    function updateDebugInfoUI(data) {
+        // Model Status in Sidebar
+        if (data.model_loaded) {
+            modelStatusIndicator.className = 'status-indicator model-loaded';
+            modelStatusIndicator.innerHTML = '<i class="fas fa-check-circle"></i>';
+            modelStatusText.textContent = 'Model Loaded';
+            modelClassesCount.textContent = data.num_classes;
+        } else {
+            modelStatusIndicator.className = 'status-indicator model-unloaded';
+            modelStatusIndicator.innerHTML = '<i class="fas fa-times-circle"></i>';
+            modelStatusText.textContent = 'Model Unloaded';
+            modelClassesCount.textContent = '0';
+        }
+
+        // Environment Check
+        opencvStatus.className = data.environment_check.opencv_available ? 'true-status' : 'false-status';
+        opencvStatus.textContent = data.environment_check.opencv_available ? 'True' : 'False';
+
+        yoloLibStatus.className = data.environment_check.yolo_available ? 'true-status' : 'false-status';
+        yoloLibStatus.textContent = data.environment_check.yolo_available ? 'True' : 'False';
+
+        trashClassesStatus.className = data.environment_check.trash_classes_imported ? 'true-status' : 'false-status';
+        trashClassesStatus.textContent = data.environment_check.trash_classes_imported ? 'True' : 'False';
+
+        modelFileStatus.className = data.environment_check.model_file_exists ? 'true-status' : 'false-status';
+        modelFileStatus.textContent = data.environment_check.model_file_exists ? 'True' : 'False';
+
+        modelLoadedStatus.className = data.model_loaded ? 'true-status' : 'false-status';
+        modelLoadedStatus.textContent = data.model_loaded ? 'True' : 'False';
+
+        // Model Information
+        modelTypeText.textContent = data.model_type;
+        
+        let classesList = Object.entries(data.model_class_names).map(([id, name]) => `${id}: ${name}`).join(', ');
+        modelClassesList.textContent = classesList || 'N/A';
+        modelNumClasses.textContent = data.num_classes;
+    }
+
+    // --- Model Status & Debug Information ---
+    async function checkModelStatus(showLoading = true) {
+        if (showLoading) {
+            modelStatusText.textContent = 'Checking...';
+            modelStatusIndicator.className = 'status-indicator model-unknown';
+            modelStatusIndicator.innerHTML = '<i class="fas fa-question-circle"></i>';
+            showStatus('Checking model and environment status...', 'info');
+        }
+        
         try {
             const response = await fetch('/health');
             const data = await response.json();
-            if (data.model_loaded) {
-                showStatus('✅ Model loaded successfully and server is running!', 'success');
-            } else {
-                showStatus('⚠️ Model not loaded. Please check server logs and ensure best.pt is present.', 'error');
+            updateDebugInfoUI(data);
+            if (showLoading) {
+                 if (data.model_loaded) {
+                    showStatus('✅ Model and environment checks complete!', 'success');
+                } else {
+                    showStatus('⚠️ Model not loaded. Check debug info for details.', 'error');
+                }
             }
         } catch (error) {
-            showStatus('❌ Cannot connect to server. Please check if the backend is running.', 'error');
+            console.error('Error fetching health status:', error);
+            modelStatusIndicator.className = 'status-indicator model-unloaded';
+            modelStatusIndicator.innerHTML = '<i class="fas fa-times-circle"></i>';
+            modelStatusText.textContent = 'Server Error';
+            modelClassesCount.textContent = '0';
+            if (showLoading) {
+                showStatus('❌ Cannot connect to server or fetch status. Backend might be down.', 'error');
+            }
         }
     }
 
-    checkModelStatus();
-    checkStatusBtn.addEventListener('click', checkModelStatus);
+    // Initial load of status
+    checkModelStatus(false); // Don't show global status on initial page load
 
-    // --- Slider Updates ---
-    frameSkipSlider.addEventListener('input', () => { frameSkipValue.textContent = frameSkipSlider.value; });
-    confidenceSlider.addEventListener('input', () => { confidenceValue.textContent = parseFloat(confidenceSlider.value).toFixed(2); });
-    maxDetectionsSlider.addEventListener('input', () => { maxDetectionsValue.textContent = maxDetectionsSlider.value; });
+    // Event listeners for sidebar status check and debug refresh
+    sidebarCheckStatusBtn.addEventListener('click', () => checkModelStatus(true));
+    refreshDebugInfoBtn.addEventListener('click', () => checkModelStatus(true));
+    testModelBtn.addEventListener('click', () => {
+        showStatus('Running a quick model test (refreshing debug info)...', 'info');
+        checkModelStatus(false); // This effectively "tests" by re-checking model status
+    });
+
+    // Reload Model Button
+    reloadModelBtn.addEventListener('click', async () => {
+        if (isProcessing) {
+            showStatus('Please wait for current processing to finish.', 'info');
+            return;
+        }
+        modelStatusText.textContent = 'Reloading...';
+        modelStatusIndicator.className = 'status-indicator model-unknown';
+        modelStatusIndicator.innerHTML = '<i class="fas fa-hourglass-half"></i>';
+        reloadModelBtn.disabled = true;
+        showStatus('Attempting to reload AI model...', 'info');
+
+        try {
+            const response = await fetch('/reload_model', { method: 'POST' });
+            const data = await response.json();
+            if (response.ok) {
+                showStatus(`✅ ${data.message}`, 'success');
+            } else {
+                throw new Error(data.message || 'Failed to reload model.');
+            }
+        } catch (error) {
+            console.error('Error reloading model:', error);
+            showStatus(`❌ Error reloading model: ${error.message}`, 'error');
+        } finally {
+            reloadModelBtn.disabled = false;
+            checkModelStatus(false); // Refresh status after reload attempt
+        }
+    });
+
+    // Debug Information Toggle
+    debugInfoHeader.addEventListener('click', () => {
+        debugInfoContent.style.display = debugInfoContent.style.display === 'none' ? 'block' : 'none';
+        debugInfoHeader.classList.toggle('expanded');
+    });
+
+
+    // --- Slider Updates (now primarily controlled from sidebar) ---
+    // Initial value display for sliders (will be picked up from their element value)
+    frameSkipValue.textContent = frameSkipSlider.value;
+    confidenceValue.textContent = parseFloat(confidenceSlider.value).toFixed(2);
+    maxDetectionsValue.textContent = maxDetectionsSlider.value;
 
     // --- Video Upload & Processing ---
     let selectedVideoFile = null;
@@ -239,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         webcam.srcObject = null;
         startWebcamBtn.style.display = 'inline-block';
         stopWebcamBtn.style.display = 'none';
-        webcamCtx.clearRect(0, 0, webcamCanvas.width, webcamCanvas.height);
+        webcamCtx.clearRect(0, 0, webcamCanvas.width, webcamCtx.canvas.height); // Use canvas.height
         showStatus('Webcam stopped.', 'info');
     });
 

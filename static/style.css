@@ -55,7 +55,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 30px;
+    padding: 0; /* Remove padding for overall body to let main-wrapper handle it */
     position: relative;
     font-size: 16px;
     line-height: 1.6;
@@ -144,23 +144,177 @@ body {
 .bubble:nth-child(even) { --random-x: 80px; }
 
 
-/* --- Main Container & Header --- */
-.main-container {
-    max-width: 1400px; /* Even wider for more spacious feel */
+/* --- Main Wrapper for Sidebar + Content --- */
+.main-wrapper {
+    display: flex;
     width: 100%;
-    margin: 0 auto;
-    padding: 40px;
-    position: relative;
-    z-index: 10; /* Ensure content is above backgrounds */
+    max-width: 1600px; /* Wider overall container */
+    margin: 30px auto; /* Center the wrapper and give top/bottom margin */
+    min-height: calc(100vh - 60px); /* Fill screen height minus margin */
+    border-radius: 30px; /* Overall rounded corners for the wrapper */
+    overflow: hidden; /* Important for glass effect within */
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); /* Stronger shadow for the entire app */
+    background: rgba(255, 255, 255, 0.03); /* Subtle background for the wrapper itself */
+    backdrop-filter: blur(10px); /* Light blur for overall app window effect */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+    width: 320px; /* Fixed width sidebar */
+    flex-shrink: 0; /* Prevent shrinking */
+    padding: 30px;
+    border-radius: 0; /* Override glass-card border-radius, it's part of wrapper now */
+    border-right: 1px solid var(--card-border-light); /* Separator */
+    box-shadow: none; /* Remove individual card shadow */
+    background: rgba(255, 255, 255, 0.05); /* Slightly darker bg for sidebar */
     display: flex;
     flex-direction: column;
-    gap: 60px; /* More space between main sections */
+    gap: 40px; /* Space between sidebar sections */
+    position: sticky; /* Sticky sidebar */
+    top: 30px; /* Position relative to wrapper top margin */
+    align-self: flex-start; /* Align to top of flex container */
+    height: calc(100vh - 60px); /* Make sidebar fill available height */
+    overflow-y: auto; /* Enable scrolling if content overflows */
+    padding-bottom: 50px; /* Extra padding for scroll content */
+}
+
+.sidebar-title {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-seafoam);
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-section {
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08); /* Subtle separator between sections */
+}
+.sidebar-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sidebar-section-title {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--color-white);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 0 5px rgba(255,255,255,0.1);
+}
+.sidebar-section-title .fas {
+    color: var(--color-seafoam);
+    font-size: 1.2em;
+}
+
+/* Model Status Info */
+.model-status-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--color-white);
+}
+
+.status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    color: var(--color-dark-water);
+}
+.status-indicator.model-loaded { background-color: #00ff00; } /* Green */
+.status-indicator.model-unloaded { background-color: #ff0000; } /* Red */
+.status-indicator.model-unknown { background-color: #ffd700; } /* Gold */
+
+.model-classes-info {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+}
+
+/* Small buttons for sidebar */
+.btn-sm {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 25px;
+    margin-top: 10px; /* Space from above elements */
+    width: 100%; /* Full width within sidebar section */
+    text-align: center;
+    justify-content: center;
+}
+.btn-sm .btn-icon {
+    font-size: 0.9em;
+}
+.model-status-check-sm {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.model-status-check-sm .btn {
+    width: auto; /* Override 100% width for smaller button */
+    padding-left: 25px;
+    padding-right: 25px;
+}
+
+/* Small sliders for sidebar */
+.slider-input-sm {
+    width: calc(100% - 60px); /* Adjust width for smaller value span */
+    height: 8px;
+    margin: 8px 0;
+}
+.slider-input-sm::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--color-white);
+}
+.slider-input-sm::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--color-white);
+}
+.slider-value-sm {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    min-width: 50px;
+    margin-left: 10px;
+}
+.setting-label-sm {
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+
+/* --- Main Content Area --- */
+.main-content {
+    flex-grow: 1; /* Takes remaining space */
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 60px; /* Space between main sections */
+    background: rgba(255, 255, 255, 0.01); /* Very subtle background for main content */
 }
 
 .app-header {
     text-align: center;
     margin-bottom: 20px; /* Reduced as gap handles spacing */
-    padding: 20px 0;
+    padding: 0; /* Remove top/bottom padding here, main-content padding handles it */
 }
 
 .app-title {
@@ -192,7 +346,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Glass Card Style (Applied to all .control-card) --- */
+/* --- Glass Card Style (Applied to all .control-card, .debug-info-section) --- */
 .glass-card {
     background: var(--card-bg-blur);
     backdrop-filter: blur(var(--card-backdrop-blur));
@@ -378,12 +532,8 @@ body {
     font-size: 1.1em;
 }
 
-.model-status-check {
-    text-align: center;
-    margin: 40px 0 80px; /* More space for visual separation */
-}
 
-/* --- Settings Sliders --- */
+/* --- Settings Sliders (main content) --- */
 .settings-group {
     margin-bottom: 30px;
 }
@@ -545,6 +695,83 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- Debug Information Section --- */
+.debug-info-section {
+    padding: 30px;
+    margin-top: 40px; /* Space from above elements */
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+.debug-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0; /* No margin here, handled by padding/gap */
+    padding-bottom: 0;
+}
+.debug-info-header .card-title-sm {
+    margin-bottom: 0; /* Override default card-title margin */
+}
+
+.debug-info-header .toggle-icon {
+    font-size: 1.8rem;
+    color: var(--color-seafoam);
+    transition: transform 0.3s ease;
+}
+.debug-info-header.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.debug-info-content {
+    margin-top: 25px; /* Space from header */
+    padding-top: 25px;
+    border-top: 1px solid rgba(255,255,255,0.08); /* Separator */
+    display: none; /* Hidden by default */
+}
+
+.debug-info-group {
+    margin-bottom: 20px;
+}
+.debug-info-group:last-child {
+    margin-bottom: 0;
+}
+
+.debug-info-group h4 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-white);
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px rgba(255,255,255,0.1);
+}
+
+.debug-info-group p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+}
+
+.debug-label {
+    font-weight: 600;
+    color: var(--color-seafoam);
+    min-width: 150px; /* Align labels */
+    text-align: left;
+}
+
+/* Specific styling for debug status indicators */
+.debug-info-group span[id$="Status"] {
+    font-weight: 700;
+    color: var(--color-white); /* Default for unset */
+    text-align: right;
+}
+.debug-info-group span.true-status { color: #00ff00; }
+.debug-info-group span.false-status { color: #ff0000; }
+.debug-info-group span.unknown-status { color: #ffd700; }
+
+
 /* --- Results Section --- */
 .results-section {
     margin-top: 80px; /* More separation */
@@ -660,12 +887,26 @@ body {
 }
 
 /* --- Responsive Adjustments --- */
+@media (max-width: 1400px) {
+    .main-wrapper {
+        max-width: 1200px;
+    }
+}
+
 @media (max-width: 1200px) {
-    .main-container {
-        padding: 25px;
+    .sidebar {
+        width: 280px;
+        padding: 20px;
+    }
+    .main-content {
+        padding: 30px;
+        gap: 40px;
     }
     .app-title {
         font-size: 3.8rem;
+    }
+    .app-tagline {
+        font-size: 1.4rem;
     }
     .controls-grid {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -674,43 +915,63 @@ body {
     .glass-card {
         padding: 35px;
     }
-}
-
-@media (max-width: 992px) {
-    .app-title {
-        font-size: 3rem;
+    .card-title {
+        font-size: 2rem;
     }
-    .app-tagline {
-        font-size: 1.4rem;
+    .card-icon {
+        font-size: 1.6em;
     }
     .section-title {
         font-size: 2.5rem;
     }
 }
 
-@media (max-width: 768px) {
-    body {
-        padding: 15px;
+@media (max-width: 992px) {
+    .main-wrapper {
+        flex-direction: column; /* Stack sidebar and main content */
+        margin: 15px auto;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.4);
+        min-height: auto;
     }
-    .main-container {
-        padding: 15px;
-        gap: 40px;
+    body {
+        padding: 15px; /* Add some padding back to body for small screens */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto; /* Allow height to adjust */
+        position: static; /* Remove sticky position */
+        border-right: none;
+        border-bottom: 1px solid var(--card-border-light); /* Add bottom border */
+        border-radius: 0; /* Reset sidebar radius for top */
+        border-top-left-radius: 20px; /* Match wrapper top radius */
+        border-top-right-radius: 20px;
+        padding-bottom: 30px; /* More standard padding */
+    }
+
+    .main-content {
+        padding: 25px;
+        gap: 30px;
     }
     .app-title {
-        font-size: 2.5rem;
+        font-size: 3rem;
     }
     .app-tagline {
         font-size: 1.2rem;
     }
     .controls-grid {
         grid-template-columns: 1fr; /* Single column on small screens */
-        gap: 30px;
+        gap: 25px;
     }
     .glass-card {
         padding: 30px;
     }
     .card-title {
         font-size: 1.8rem;
+    }
+    .card-icon {
+        font-size: 1.4em;
     }
     .btn {
         padding: 14px 30px;
@@ -726,10 +987,10 @@ body {
         font-size: 1.2rem;
     }
     .section-title {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
     .section-subtitle {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     .spinner {
         width: 50px;
@@ -750,7 +1011,16 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 2.5rem;
+    }
+}
+
 @media (max-width: 480px) {
+    .main-wrapper {
+        border-radius: 15px; /* Smaller overall radius */
+    }
     .app-title {
         font-size: 2rem;
     }
