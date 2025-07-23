@@ -3,29 +3,21 @@ pip>=23.0.1
 setuptools>=65.5.0
 wheel>=0.38.0
 
-# Core Flask Application Dependencies
-Flask==3.0.2
-flask-cors==5.0.1
-gunicorn==23.0.0
+# Streamlit and its core dependencies
+streamlit==1.42.2 # Use this exact version or a very recent one
+streamlit-webrtc==0.63.3 # Crucial for webcam streaming
+# Pillow is usually a dependency of Streamlit, but good to list explicitly
+Pillow==10.3.0 # Use your actual version
 
 # AI/Computer Vision Dependencies
 # Prefer opencv-python-headless for server environments (no GUI components)
-opencv-python-headless==4.12.0.88
-numpy==1.26.4 # Keeping this specific numpy version as it's often more stable with older ultralytics/tf
-pillow==10.3.0
-ultralytics==8.3.167
+opencv-python-headless==4.12.0.88 # Use your actual version
+numpy==1.26.4 # Use your actual version
+ultralytics==8.3.167 # Use your actual version
 
-# Ultralytics often pulls its own torch/torchvision.
-# Explicitly listing them can cause conflicts or large downloads.
-# If ultralytics fails to install without them, you might need to add them back,
-# but try without first.
+# For streamlit-webrtc's video processing
+av==14.4.0 # Use your actual version
 
-# Other direct dependencies that might be pulled by the above, but good to list if needed
-# requests==2.32.3 # Flask and other libs might pull this
-# MarkupSafe==2.1.5 # Flask dependency
-# Jinja2==3.1.3 # Flask dependency
-# Werkzeug==3.0.2 # Flask dependency
-# click==8.1.7 # Flask dependency
-
-# For now, let's rely on Flask, ultralytics, and opencv-python-headless to pull their own sub-dependencies.
-# This keeps the list minimal and reduces potential conflicts.
+# Other common dependencies that might be pulled by Streamlit/WebRTC/Ultralytics
+# You can generate a full list with `pip freeze` in a clean venv after installing the above,
+# but try this minimal list first.
