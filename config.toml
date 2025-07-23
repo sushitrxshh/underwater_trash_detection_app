@@ -1,0 +1,5 @@
+[runtime]
+# Pin to Python 3.9 or 3.10, which have 'distutils'
+# 3.9 is generally very stable for these libraries
+# Streamlit Cloud supports 3.8 to 3.10
+python_version = "3.9"

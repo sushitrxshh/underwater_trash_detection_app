@@ -5,21 +5,17 @@ wheel>=0.38.0
 
 # Streamlit and its core dependencies
 streamlit==1.42.2
-# streamlit-webrtc requires av>=14.0.0
+# streamlit-webrtc==0.63.3 requires aiortc>=1.11.0, which requires av>=14.0.0,<15.0.0
 streamlit-webrtc==0.63.3 
 
 # AI/Computer Vision Dependencies
 # Pinning to versions known to have stable wheels for Linux/Python 3.9/3.10
-# and compatible numpy versions.
 opencv-python-headless==4.8.0.76 
 numpy==1.24.4 
 Pillow==9.5.0 
 ultralytics==8.0.196 
 
-# For streamlit-webrtc's video processing
-# Must be compatible with aiortc (which streamlit-webrtc depends on)
-# aiortc 1.13.0 requires av>=14.0.0,<15.0.0
-av==14.4.0 # Updated to a version compatible with aiortc and the chosen Python
+# For streamlit-webrtc's video processing: MUST be >=14.0.0 for aiortc compatibility
+av==14.4.0 
 
 # Other common dependencies that might be pulled by Streamlit/WebRTC/Ultralytics
-# Keep this minimal.
